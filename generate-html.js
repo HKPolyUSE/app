@@ -6,31 +6,40 @@ const rootDir = path.resolve(__dirname);
 const repoName = 'app';
 const orgName = 'hkpolyuse';
 
+function getComponentName(content, fallback) {
+  let match = content.match(/export\s+default\s+function\s+(\w+)/);
+  if (match) return match[1];
+
+  match = content.match(/export\s+default\s+(\w+)\s*;?\s*$/m);
+  if (match) return match[1];
+
+  match = content.match(/(?:const|let|var)\s+(\w+)\s*=\s*(?:function|\(|React\.memo)/);
+  if (match) return match[1];
+
+  return fallback;
+}
+
 const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.jsx'));
 
 files.forEach(file => {
   const name = path.basename(file, '.jsx');
   const filePath = path.resolve(srcDir, file);
 
-  // 1. Read original JSX content
   let content = fs.readFileSync(filePath, 'utf8');
 
-  // 2. Add ReactDOM import at top if not already present
   if (!content.includes('react-dom/client')) {
     content = `import ReactDOM from 'react-dom/client';\n` + content;
   }
 
-  // 3. Add render call at bottom if not already present
+  const componentName = getComponentName(content, name.charAt(0).toUpperCase() + name.slice(1));
+
   if (!content.includes('ReactDOM.createRoot')) {
-    const componentName = name.charAt(0).toUpperCase() + name.slice(1);
     content += `\nReactDOM.createRoot(document.getElementById('root')).render(<${componentName} />);\n`;
   }
 
-  // 4. Write patched JSX to ROOT (not src/)
   const patchedFile = `${name}.patched.jsx`;
-  fs.writeFileSync(path.resolve(rootDir, patchedFile), content);  // ← rootDir here
+  fs.writeFileSync(path.resolve(rootDir, patchedFile), content);
 
-  // 5. Generate HTML pointing to root-level patched file
   const html = `<!DOCTYPE html>
 <html>
   <head>
@@ -44,10 +53,9 @@ files.forEach(file => {
 </html>`;
 
   fs.writeFileSync(path.resolve(rootDir, `${name}.html`), html);
-  console.log(`Generated ${name}.html → ${patchedFile} (root)`);
+  console.log(`Generated ${name}.html → renders <${componentName} />`);
 });
 
-// Generate README
 const links = files.map(file => {
   const name = path.basename(file, '.jsx');
   return `- [${name}](https://${orgName}.github.io/${repoName}/${name}.html)`;
