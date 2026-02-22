@@ -15,7 +15,7 @@ fs.readdirSync(srcDir)
 
 export default defineConfig({
   plugins: [react()],
-  base: '/your-repo-name/',
+  base: '/app/',
   build: {
     rollupOptions: { input: entries }
   }
