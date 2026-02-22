@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const MAX_ROUNDS = 20;
+const MAX_ROUNDS = 20; 
 const TIERS = [
   { name: "Micro Instance", capacity: 80, cpu: 4, ram: 16, upgradeCost: 0, maintenance: 600 },
   { name: "Standard Instance", capacity: 160, cpu: 8, ram: 32, upgradeCost: 2000, maintenance: 1500 },
