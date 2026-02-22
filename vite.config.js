@@ -17,6 +17,13 @@ export default defineConfig({
   plugins: [react()],
   base: '/app/',
   build: {
-    rollupOptions: { input: entries }
+    rollupOptions: {
+      input: entries,
+      output: {
+        entryFileNames: `assets/[name]-[hash].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
+        assetFileNames: `assets/[name]-[hash].[ext]`
+      }
+    }
   }
 });
