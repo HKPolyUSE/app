@@ -1,0 +1,22 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import fs from 'fs';
+import path from 'path';
+
+const srcDir = path.resolve(__dirname, 'src');
+const entries = {};
+fs.readdirSync(srcDir)
+  .filter(f => f.endsWith('.jsx'))
+  .forEach(f => {
+    const name = path.basename(f, '.jsx');
+    entries[name] = resolve(srcDir, `${name}.html`);
+  });
+
+export default defineConfig({
+  plugins: [react()],
+  base: '/your-repo-name/',
+  build: {
+    rollupOptions: { input: entries }
+  }
+});
