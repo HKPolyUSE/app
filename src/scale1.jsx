@@ -28,26 +28,18 @@ function getResponseTime(utilization) {
   return 2000 + Math.round(3000 * (utilization - 1));
 }
 
-function getResponseDescription(rt, utilization) {
-  if (utilization >= 1.01) return "System overloaded!";
-  if (rt > 950) return "Extremely slow ⚠️";
-  if (rt > 700) return "Very slow";
-  if (rt > 450) return "Lagging";
-  return "Fast";
-}
-
 const RESPONSE_TIME_CHURN_THRESHOLD = 450;
 const SATISFACTION_CHURN_THRESHOLD = 0.6;
 
 // Shared Modal Component
 function Modal({ title, children, onClose, icon, footer }) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[100] bg-black bg-opacity-40 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-[100] bg-black bg-opacity-40 backdrop-blur-sm p-4 antialiased">
       <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-fadein border border-slate-100">
         <div className="p-8 text-center">
           {icon && <div className="text-5xl mb-4">{icon}</div>}
           <h2 className="text-2xl font-bold text-slate-800 mb-2">{title}</h2>
-          <div className="text-slate-600 mb-6">{children}</div>
+          <div className="text-slate-600 mb-6 leading-relaxed">{children}</div>
           {footer ? footer : (
             <button onClick={onClose} className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-md active:scale-[0.98]">
               Continue
@@ -74,7 +66,6 @@ export default function VerticalScaleSimulation() {
   const [totalDowntime, setTotalDowntime] = useState(0);
   const [totalCrashes, setTotalCrashes] = useState(0);
   const [budget, setBudget] = useState(INITIAL_BUDGET); 
-  const [lastProfit, setLastProfit] = useState(0);
   const [upgrades, setUpgrades] = useState(0);
   const [gameOverReason, setGameOverReason] = useState(null);
   const [stability, setStability] = useState(100);
@@ -90,7 +81,6 @@ export default function VerticalScaleSimulation() {
   const { capacity, cpu, ram, maintenance } = currentTier;
   const utilization = activeUsers / capacity;
   const responseTime = getResponseTime(utilization);
-  const responseDesc = getResponseDescription(responseTime, utilization);
 
   const nextTierIndex = tier + 1;
   const nextTier = TIERS[nextTierIndex];
@@ -225,7 +215,6 @@ export default function VerticalScaleSimulation() {
     setCrashLeft(newCrashLeft);
     setUserSatisfaction(newSatisfaction);
     setBudget(newBudget);
-    setLastProfit(netBudgetChange);
     setStability(newStability);
     setConsecutiveHighLoad(newConsecutive);
     setLog(prev => [...prev, ...roundLog]);
@@ -238,7 +227,6 @@ export default function VerticalScaleSimulation() {
     setTier((cur) => cur + 1);
     setUpgrades((u) => u + 1);
     setBudget((prev) => prev - nextUpgradeCost);
-    setLastProfit(0);
     setLog(prev => [...prev, { type: "downtime", text: `Round ${round} — ⬆️ Scaling to Tier ${tier + 2}.` }]);
     setTotalDowntime((v) => v + 1);
   };
@@ -246,20 +234,20 @@ export default function VerticalScaleSimulation() {
   const reset = () => {
     setRound(1); setTier(0); setDowntimeLeft(0); setCrash(false); setCrashLeft(0);
     setUserSatisfaction(1); setActiveUsers(getInitialUsers()); setLog([]);
-    setTotalDowntime(0); setTotalCrashes(0); setBudget(INITIAL_BUDGET); setLastProfit(0);
+    setTotalDowntime(0); setTotalCrashes(0); setBudget(INITIAL_BUDGET);
     setUpgrades(0); setStability(100); setConsecutiveHighLoad(0); setGameOverReason(null);
   };
 
   const satisEmoji = userSatisfaction >= 0.85 ? "🟢" : userSatisfaction >= 0.6 ? "😐" : "😡";
   const systemStatusEmoji = crash ? "🔥" : downtimeLeft ? "⏳" : utilization > 0.85 ? "⚠️" : "✅";
   const systemStatusLabel = isRecovering ? "Rebooting" : crash ? "Down" : isScaling ? "Scaling" : utilization > 0.85 ? "High Load" : "Stable";
-  const stabilityColor = stability > 70 ? "text-green-600" : stability > 30 ? "text-yellow-600" : "text-red-600";
+  const stabilityColor = stability > 70 ? "text-emerald-600" : stability > 30 ? "text-amber-600" : "text-rose-600";
   const canUpgradeStatus = tier < TIERS.length - 1 && !isDown && !isGameOver && enoughBudgetForUpgrade;
 
   const rating = getPerformanceRating({ gameOverReason, downtime: totalDowntime, crashes: totalCrashes, satisfaction: userSatisfaction, budget });
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-2 sm:p-4 font-sans text-slate-900 overflow-hidden">
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-2 sm:p-4 font-sans text-slate-900 overflow-hidden antialiased selection:bg-indigo-100">
       {showEventModal && (
         <Modal title="🚀 Viral Surge!" icon="📈" onClose={() => setShowEventModal(false)}>
           Growth for Round 10 was doubled due to high satisfaction!
@@ -289,30 +277,30 @@ export default function VerticalScaleSimulation() {
             </div>
           }
         >
-          <div className="text-sm space-y-4 text-left">
-            <p>You are about to upgrade your server to a <b>{nextTier.name}</b>.</p>
-            <div className="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div className="text-sm space-y-4 text-left font-medium">
+            <p className="text-slate-600">You are about to upgrade your server to a <b className="text-slate-900">{nextTier.name}</b>.</p>
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-inner">
               <div>
-                <span className="block text-[10px] text-slate-400 uppercase font-black">Capacity</span>
-                <span className="font-bold">{nextTier.capacity} Users</span>
+                <span className="block text-[11px] text-slate-400 uppercase font-black tracking-wider">Capacity</span>
+                <span className="font-bold text-slate-800">{nextTier.capacity} Users</span>
               </div>
               <div>
-                <span className="block text-[10px] text-slate-400 uppercase font-black">Op. Cost</span>
+                <span className="block text-[11px] text-slate-400 uppercase font-black tracking-wider">Op. Cost</span>
                 <span className="font-bold text-rose-500">-${nextTier.maintenance}/rd</span>
               </div>
               <div>
-                <span className="block text-[10px] text-slate-400 uppercase font-black">Upgrade Cost</span>
+                <span className="block text-[11px] text-slate-400 uppercase font-black tracking-wider">Upgrade Cost</span>
                 <span className="font-bold text-indigo-600">${nextTier.upgradeCost}</span>
               </div>
               <div>
-                <span className="block text-[10px] text-slate-400 uppercase font-black">Hardware</span>
-                <span className="font-bold">{nextTier.cpu}vCPU, {nextTier.ram}GB</span>
+                <span className="block text-[11px] text-slate-400 uppercase font-black tracking-wider">Hardware</span>
+                <span className="font-bold text-slate-800">{nextTier.cpu}vCPU, {nextTier.ram}GB</span>
               </div>
             </div>
             <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-start gap-3">
               <span className="text-xl">⚠️</span>
-              <p className="text-amber-800 font-medium text-xs leading-relaxed">
-                <b>DOWNTIME WARNING:</b> Scaling will take <b>{SCALE_UP_DOWNTIME} rounds</b>. Your web app and database will be completely offline, incurring user churn and zero profit.
+              <p className="text-amber-800 font-bold text-[11px] leading-normal uppercase tracking-tight">
+                DOWNTIME WARNING: Scaling will take {SCALE_UP_DOWNTIME} rounds. System will be completely offline.
               </p>
             </div>
           </div>
@@ -322,73 +310,73 @@ export default function VerticalScaleSimulation() {
       {gameOverReason && (
         <Modal title="Simulation Result" icon={gameOverReason === "budget" ? "💸" : "🏆"} onClose={reset}>
           <div className={`text-xl font-bold mb-2 ${rating.color}`}>{rating.title}</div>
-          <p className="mb-4 text-sm italic">"{rating.desc}"</p>
-          <div className="grid grid-cols-2 gap-4 text-left bg-slate-50 p-4 rounded-2xl text-sm border border-slate-100">
-            <div>Final Users: <b>{Math.round(activeUsers)}</b></div>
-            <div>Final Budget: <b>${Math.round(budget).toLocaleString()}</b></div>
-            <div>Satisfaction: <b>{(userSatisfaction * 100).toFixed(0)}%</b></div>
-            <div>Downtime: <b>{totalDowntime} rds</b></div>
+          <p className="mb-4 text-sm italic text-slate-500">"{rating.desc}"</p>
+          <div className="grid grid-cols-2 gap-4 text-left bg-slate-50 p-6 rounded-2xl text-sm border border-slate-100">
+            <div>Final Users: <b className="text-slate-800">{Math.round(activeUsers)}</b></div>
+            <div>Final Budget: <b className="text-slate-800">${Math.round(budget).toLocaleString()}</b></div>
+            <div>Satisfaction: <b className="text-slate-800">{(userSatisfaction * 100).toFixed(0)}%</b></div>
+            <div>Downtime: <b className="text-slate-800">{totalDowntime} rds</b></div>
           </div>
         </Modal>
       )}
 
       {showInstructions && (
         <Modal title="System Handbook" onClose={() => setShowInstructions(false)}>
-          <div className="text-left text-xs space-y-2 leading-relaxed">
-            <p>• <span className="font-bold">Scaling State:</span> While scaling, the system is offline. <span className="font-bold">Utilization</span> and <span className="font-bold">Stability</span> readouts are unavailable.</p>
-            <p>• <span className="font-bold">Utilization Buffer:</span> System handles one round above 85% load. After that, <span className="text-rose-500 font-bold">Stability</span> drains.</p>
-            <p>• <span className="font-bold">Colocated Architecture:</span> App and DB share the same host resources.</p>
+          <div className="text-left text-sm space-y-3 leading-relaxed text-slate-600">
+            <p>• <span className="font-bold text-slate-900">Scaling State:</span> System is offline during upgrades. Monitoring readouts are disabled.</p>
+            <p>• <span className="font-bold text-slate-900">Utilization Buffer:</span> Sustained load above 85% drains <span className="text-rose-500 font-bold">Stability</span>.</p>
+            <p>• <span className="font-bold text-slate-900">Colocated Architecture:</span> Application and Database share host hardware resources.</p>
           </div>
         </Modal>
       )}
 
-      <div className="flex flex-col w-full max-w-6xl h-full max-h-[900px] bg-white border border-slate-200 rounded-[2.5rem] shadow-xl overflow-hidden">
+      <div className="flex flex-col w-full max-w-6xl h-full max-h-[860px] bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl overflow-hidden">
         
-        <header className="flex-shrink-0 p-4 sm:px-8 border-b bg-white flex items-center justify-between gap-4">
+        <header className="flex-shrink-0 p-5 sm:px-10 border-b bg-white flex items-center justify-between gap-6">
           <div className="flex flex-col">
-            <h1 className="text-lg font-black tracking-tight text-slate-800 uppercase">Infra-Scaler v2</h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vertical Stack Sim</p>
+            <h1 className="text-xl font-black tracking-tight text-slate-800 uppercase leading-none">Infra-Scaler v2</h1>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">Vertical Stack Simulation</p>
           </div>
 
           <div className="flex gap-2">
-            <button onClick={() => setShowInstructions(true)} className="h-9 px-3 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold transition-all">Manual</button>
-            <button onClick={nextRound} className="h-9 px-5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-20 transition-all shadow-sm" disabled={isGameOver}>
+            <button onClick={() => setShowInstructions(true)} className="h-10 px-4 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold transition-all active:scale-95">Manual</button>
+            <button onClick={nextRound} className="h-10 px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-20 transition-all shadow-md active:scale-95" disabled={isGameOver}>
               {round === MAX_ROUNDS ? "Results" : "Next Round"}
             </button>
             {isCrashedWaiting ? (
-              <button onClick={handleRestart} className="h-9 px-5 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-all animate-pulse shadow-md">Restart</button>
+              <button onClick={handleRestart} className="h-10 px-6 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-all animate-pulse shadow-md active:scale-95">Restart Server</button>
             ) : (
               <button 
                 onClick={() => setShowScaleConfirm(true)} 
-                className="h-9 px-5 bg-pink-600 text-white rounded-lg font-bold hover:bg-pink-700 disabled:opacity-20 transition-all shadow-md" 
+                className="h-10 px-6 bg-pink-600 text-white rounded-xl font-bold hover:bg-pink-700 disabled:opacity-20 transition-all shadow-md active:scale-95" 
                 disabled={!canUpgradeStatus}
               >
                 Scale Up {nextUpgradeCost !== undefined ? `($${nextUpgradeCost})` : ""}
               </button>
             )}
-            <button onClick={reset} className="h-9 w-9 flex items-center justify-center bg-slate-100 text-slate-400 rounded-lg hover:bg-slate-200 transition-all">↺</button>
+            <button onClick={reset} className="h-10 w-10 flex items-center justify-center bg-slate-100 text-slate-400 rounded-xl hover:bg-slate-200 transition-all">↺</button>
           </div>
         </header>
 
         <main className="flex-1 flex flex-col md:flex-row overflow-hidden border-b border-slate-100">
           
-          <section className="w-full md:w-3/5 p-6 sm:p-8 overflow-y-auto border-r border-slate-50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-6">
-              <div className="space-y-3">
-                <h4 className="text-[10px] uppercase font-black tracking-widest text-slate-300 pb-2 border-b border-slate-50">Infrastructure</h4>
+          <section className="w-full md:w-3/5 p-8 sm:p-10 overflow-y-auto border-r border-slate-50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-14 gap-y-10">
+              <div className="space-y-4">
+                <h4 className="text-[11px] uppercase font-black tracking-[0.2em] text-slate-300 pb-3 border-b border-slate-50 mb-2">Infrastructure</h4>
                 {[
                   { label: "Round", value: `${Math.min(round, MAX_ROUNDS)} / ${MAX_ROUNDS}` },
                   { label: "Status", value: <div className="flex items-center gap-2"><span>{systemStatusEmoji}</span><span className="font-bold">{systemStatusLabel}</span></div> },
-                  { label: "Instance", value: `${currentTier.name} (${cpu}vCPU, ${ram}GB)` },
+                  { label: "Instance", value: `${currentTier.name} (${cpu}C, ${ram}G)` },
                   { label: "Stability", value: isDown ? "—" : <span className={`font-black ${stabilityColor}`}>{stability.toFixed(0)}%</span> },
                   { label: "Total Crashes", value: totalCrashes }
                 ].map((m, i) => (
-                  <div key={i} className="flex justify-between items-center"><span className="text-slate-400 text-[10px] font-bold uppercase">{m.label}</span><div className="text-xs font-bold text-slate-800">{m.value}</div></div>
+                  <div key={i} className="flex justify-between items-center"><span className="text-slate-400 text-[11px] font-bold uppercase tracking-wide">{m.label}</span><div className="text-sm font-bold text-slate-800">{m.value}</div></div>
                 ))}
               </div>
 
-              <div className="space-y-3">
-                <h4 className="text-[10px] uppercase font-black tracking-widest text-slate-300 pb-2 border-b border-slate-50">Ops & Finance</h4>
+              <div className="space-y-4">
+                <h4 className="text-[11px] uppercase font-black tracking-[0.2em] text-slate-300 pb-3 border-b border-slate-50 mb-2">Ops & Finance</h4>
                 {[
                   { label: "Active Users", value: Math.round(activeUsers) },
                   { label: "Latency", value: isDown ? "—" : <span className={responseTime > 700 ? "text-rose-500 font-bold" : "text-emerald-600"}>{responseTime}ms</span> },
@@ -397,60 +385,60 @@ export default function VerticalScaleSimulation() {
                   { label: "Budget", value: <span className="font-black text-indigo-600">${Math.round(budget).toLocaleString()}</span> },
                   { label: "Operating Cost", value: <span className="text-rose-400 font-bold">-${maintenance}/rd</span> }
                 ].map((m, i) => (
-                  <div key={i} className="flex justify-between items-center"><span className="text-slate-400 text-[10px] font-bold uppercase">{m.label}</span><div className="text-xs font-bold text-slate-800">{m.value}</div></div>
+                  <div key={i} className="flex justify-between items-center"><span className="text-slate-400 text-[11px] font-bold uppercase tracking-wide">{m.label}</span><div className="text-sm font-bold text-slate-800">{m.value}</div></div>
                 ))}
               </div>
             </div>
           </section>
 
-          <section className="w-full md:w-2/5 bg-slate-50/50 p-6 flex flex-col items-center justify-center relative overflow-hidden">
-            <h4 className="absolute top-6 left-6 text-[9px] uppercase font-black tracking-widest text-slate-300">Live Stack</h4>
+          <section className="w-full md:w-2/5 bg-slate-50/40 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+            <h4 className="absolute top-8 left-8 text-[10px] uppercase font-black tracking-[0.25em] text-slate-300">Architecture</h4>
             
-            <div className={`relative w-full max-w-[240px] p-1 rounded-[2rem] border-4 transition-all duration-700 shadow-xl ${crash ? 'border-rose-200 bg-rose-50' : isScaling ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'}`}>
-              <div className="p-5 space-y-3">
-                <div className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-1 ${isDown ? 'bg-slate-100 text-slate-400 grayscale' : 'bg-indigo-50 border-indigo-100 text-indigo-600 shadow-sm'}`}>
-                  <span className="text-[10px] font-black uppercase">Web App</span>
+            <div className={`relative w-full max-w-[260px] p-1.5 rounded-[2.5rem] border-[3px] transition-all duration-700 shadow-xl ${crash ? 'border-rose-200 bg-rose-50' : isScaling ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'}`}>
+              <div className="p-6 space-y-4">
+                <div className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${isDown ? 'bg-slate-100 border-slate-100 text-slate-400 grayscale' : 'bg-indigo-50/50 border-indigo-100 text-indigo-600 shadow-sm'}`}>
+                  <span className="text-[11px] font-black uppercase tracking-widest">Web App</span>
                   <div className="w-full">
-                    <div className="flex justify-between text-[8px] font-bold mb-0.5 uppercase tracking-tighter opacity-70">
+                    <div className="flex justify-between text-[10px] font-bold mb-1.5 uppercase tracking-tight opacity-80">
                       <span>Resource Load</span>
                       <span>{isDown ? '0%' : `${(utilization * 100).toFixed(0)}%`}</span>
                     </div>
-                    <div className="w-full bg-indigo-200 h-1 rounded-full overflow-hidden">
-                      <div className="bg-indigo-500 h-full transition-all duration-700" style={{ width: isDown ? '0%' : `${utilization * 100}%` }}></div>
+                    <div className="w-full bg-indigo-200 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-indigo-500 h-full transition-all duration-700 ease-out" style={{ width: isDown ? '0%' : `${utilization * 100}%` }}></div>
                     </div>
                   </div>
                 </div>
-                <div className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-1 ${isDown ? 'bg-slate-100 text-slate-400 grayscale' : 'bg-emerald-50 border-emerald-100 text-emerald-600 shadow-sm'}`}>
-                  <span className="text-[10px] font-black uppercase">Database</span>
+                <div className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${isDown ? 'bg-slate-100 border-slate-100 text-slate-400 grayscale' : 'bg-emerald-50/50 border-emerald-100 text-emerald-600 shadow-sm'}`}>
+                  <span className="text-[11px] font-black uppercase tracking-widest">Database</span>
                   <div className="w-full">
-                    <div className="flex justify-between text-[8px] font-bold mb-0.5 uppercase tracking-tighter opacity-70">
+                    <div className="flex justify-between text-[10px] font-bold mb-1.5 uppercase tracking-tight opacity-80">
                       <span>Resource Load</span>
                       <span>{isDown ? '0%' : `${(Math.min(utilization * 1.1, 1) * 100).toFixed(0)}%`}</span>
                     </div>
-                    <div className="w-full bg-emerald-200 h-1 rounded-full overflow-hidden">
-                      <div className="bg-emerald-500 h-full transition-all duration-700" style={{ width: isDown ? '0%' : `${Math.min(utilization * 1.1, 1) * 100}%` }}></div>
+                    <div className="w-full bg-emerald-200 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-emerald-500 h-full transition-all duration-700 ease-out" style={{ width: isDown ? '0%' : `${Math.min(utilization * 1.1, 1) * 100}%` }}></div>
                     </div>
                   </div>
                 </div>
-                <div className="pt-2 flex justify-between gap-1 text-[9px] font-bold text-slate-500">
-                  <div className="flex-1 bg-slate-100 p-1.5 rounded-lg text-center">{cpu}vCPU</div>
-                  <div className="flex-1 bg-slate-100 p-1.5 rounded-lg text-center">{ram}GB</div>
+                <div className="pt-2 flex justify-between gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                  <div className="flex-1 bg-slate-100 p-2 rounded-xl text-center">{cpu} vCPU</div>
+                  <div className="flex-1 bg-slate-100 p-2 rounded-xl text-center">{ram} GB RAM</div>
                 </div>
               </div>
             </div>
-            <p className="mt-4 text-[9px] text-slate-400 font-bold text-center leading-tight uppercase tracking-widest">Monolithic Topology</p>
+            <p className="mt-6 text-[10px] text-slate-400 font-black text-center leading-tight uppercase tracking-[0.2em] opacity-60">Monolithic Topology</p>
           </section>
         </main>
 
-        <footer className="flex-shrink-0 h-40 p-4 sm:px-8 bg-slate-50">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Event Stream</h3>
-          <div className="bg-white border border-slate-100 rounded-2xl h-[calc(100%-20px)] overflow-y-auto text-[10px] p-3 shadow-inner flex flex-col gap-1">
+        <footer className="flex-shrink-0 h-44 p-6 sm:px-10 bg-slate-50/80">
+          <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Event Stream Telemetry</h3>
+          <div className="bg-white border border-slate-100 rounded-2xl h-[calc(100%-24px)] overflow-y-auto text-[11px] p-4 shadow-inner flex flex-col gap-1.5 scrollbar-hide">
             {log.length === 0 ? (
-              <div className="p-4 text-slate-300 italic text-center font-bold">Awaiting telemetry...</div>
+              <div className="p-4 text-slate-300 italic text-center font-bold uppercase tracking-widest">Awaiting Initial Feed...</div>
             ) : (
               <>
                 {log.map((item, i) => (
-                  <div className={`p-2 rounded-lg border-b border-transparent ${item.type === "crash" ? "bg-rose-50 text-rose-800 font-bold" : item.type === "downtime" ? "bg-amber-50 text-amber-800" : item.type === "warn" ? "bg-orange-50 text-orange-900 font-bold" : "bg-slate-50 text-slate-600"}`} key={i}>
+                  <div className={`p-3 rounded-xl border-b border-transparent leading-relaxed ${item.type === "crash" ? "bg-rose-50 text-rose-800 font-bold border-l-4 border-l-rose-500" : item.type === "downtime" ? "bg-amber-50 text-amber-800 font-medium" : item.type === "warn" ? "bg-orange-50 text-orange-900 font-bold" : "bg-slate-50 text-slate-600"}`} key={i}>
                     {item.text}
                   </div>
                 ))}
