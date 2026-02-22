@@ -4,15 +4,15 @@ import { resolve } from 'path';
 import fs from 'fs';
 import path from 'path';
 
-const srcDir = path.resolve(__dirname, 'src');   // ← scan jsx files here
-const rootDir = path.resolve(__dirname);          // ← html files are here
-
+const srcDir = path.resolve(__dirname, 'src');
+const rootDir = path.resolve(__dirname);
 const entries = {};
+
 fs.readdirSync(srcDir)
-  .filter(f => f.endsWith('.jsx'))
+  .filter(f => f.endsWith('.jsx') && !f.endsWith('.patched.jsx'))
   .forEach(f => {
     const name = path.basename(f, '.jsx');
-    entries[name] = resolve(rootDir, `${name}.html`);  // ← root, not src
+    entries[name] = resolve(rootDir, `${name}.html`);
   });
 
 export default defineConfig({
