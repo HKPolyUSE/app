@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const MAX_ROUNDS = 20; 
+const MAX_ROUNDS = 20;
 const TIERS = [
   { name: "Micro Instance", capacity: 80, cpu: 4, ram: 16, upgradeCost: 0, maintenance: 600 },
   { name: "Standard Instance", capacity: 160, cpu: 8, ram: 32, upgradeCost: 2000, maintenance: 1500 },
@@ -353,7 +353,7 @@ export default function VerticalScaleSimulation() {
           <div className="flex gap-2">
             <button onClick={() => setShowInstructions(true)} className="h-9 px-3 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold transition-all">Manual</button>
             <button onClick={nextRound} className="h-9 px-5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-20 transition-all shadow-sm" disabled={isGameOver}>
-              {round === MAX_ROUNDS ? "Results" : "Run Round"}
+              {round === MAX_ROUNDS ? "Results" : "Next Round"}
             </button>
             {isCrashedWaiting ? (
               <button onClick={handleRestart} className="h-9 px-5 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-all animate-pulse shadow-md">Restart</button>
@@ -363,7 +363,7 @@ export default function VerticalScaleSimulation() {
                 className="h-9 px-5 bg-pink-600 text-white rounded-lg font-bold hover:bg-pink-700 disabled:opacity-20 transition-all shadow-md" 
                 disabled={!canUpgradeStatus}
               >
-                Scale Up
+                Scale Up {nextUpgradeCost !== undefined ? `($${nextUpgradeCost})` : ""}
               </button>
             )}
             <button onClick={reset} className="h-9 w-9 flex items-center justify-center bg-slate-100 text-slate-400 rounded-lg hover:bg-slate-200 transition-all">↺</button>
@@ -379,7 +379,7 @@ export default function VerticalScaleSimulation() {
                 {[
                   { label: "Round", value: `${Math.min(round, MAX_ROUNDS)} / ${MAX_ROUNDS}` },
                   { label: "Status", value: <div className="flex items-center gap-2"><span>{systemStatusEmoji}</span><span className="font-bold">{systemStatusLabel}</span></div> },
-                  { label: "Instance", value: `${currentTier.name} (${cpu}vCPU, ${ram}GB)` }, // Updated to show CPU and Memory
+                  { label: "Instance", value: `${currentTier.name} (${cpu}vCPU, ${ram}GB)` },
                   { label: "Stability", value: isDown ? "—" : <span className={`font-black ${stabilityColor}`}>{stability.toFixed(0)}%</span> },
                   { label: "Total Crashes", value: totalCrashes }
                 ].map((m, i) => (
