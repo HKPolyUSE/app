@@ -5,19 +5,32 @@ on:
     branches: [main]
 
 permissions:
-  contents: write        # ← allows pushing to gh-pages branch
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - run: npm install
       - run: node generate-html.js
+
+      # Commit updated README back to main
+      - name: Commit README
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --staged --quiet || git commit -m "Update README with latest page links"
+          git push origin main
+
       - run: npm run build
+
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
