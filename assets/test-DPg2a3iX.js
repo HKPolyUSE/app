@@ -1,0 +1,1 @@
+import{c as t,j as e}from"./client-B_pnGUEq.js";function s(){return e.jsx("div",{className:"flex h-screen w-full items-center justify-center bg-slate-50 font-sans text-[18px] text-slate-800",children:e.jsx("p",{children:"hi"})})}t.createRoot(document.getElementById("root")).render(e.jsx(s,{}));
