@@ -22,14 +22,15 @@ files.forEach(file => {
 
   // 3. Add render call at bottom if not already present
   if (!content.includes('ReactDOM.createRoot')) {
-    content += `\nReactDOM.createRoot(document.getElementById('root')).render(<${name.charAt(0).toUpperCase() + name.slice(1)} />);\n`;
+    const componentName = name.charAt(0).toUpperCase() + name.slice(1);
+    content += `\nReactDOM.createRoot(document.getElementById('root')).render(<${componentName} />);\n`;
   }
 
-  // 4. Write patched JSX to a temp file
+  // 4. Write patched JSX to ROOT (not src/)
   const patchedFile = `${name}.patched.jsx`;
-  fs.writeFileSync(path.resolve(srcDir, patchedFile), content);
+  fs.writeFileSync(path.resolve(rootDir, patchedFile), content);  // ← rootDir here
 
-  // 5. Generate HTML with Tailwind CDN pointing to patched file
+  // 5. Generate HTML pointing to root-level patched file
   const html = `<!DOCTYPE html>
 <html>
   <head>
@@ -43,7 +44,7 @@ files.forEach(file => {
 </html>`;
 
   fs.writeFileSync(path.resolve(rootDir, `${name}.html`), html);
-  console.log(`Generated ${name}.html with patched ${patchedFile}`);
+  console.log(`Generated ${name}.html → ${patchedFile} (root)`);
 });
 
 // Generate README
@@ -52,6 +53,5 @@ const links = files.map(file => {
   return `- [${name}](https://${orgName}.github.io/${repoName}/${name}.html)`;
 }).join('\n');
 
-const readme = `# App Components\n\n## Live Pages\n\n${links}\n`;
-fs.writeFileSync(path.resolve(rootDir, 'README.md'), readme);
+fs.writeFileSync(path.resolve(rootDir, 'README.md'), `# App Components\n\n## Live Pages\n\n${links}\n`);
 console.log('Generated README.md');
