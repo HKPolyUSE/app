@@ -1,0 +1,1 @@
+import{c as o,j as e}from"./client-CslDUulc.js";function t(){return e.jsx("div",{children:e.jsx("h1",{children:"Hello from App1!"})})}const r=o.createRoot(document.getElementById("root"));r.render(e.jsx(t,{}));
