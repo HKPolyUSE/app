@@ -1,9 +1,11 @@
 {
-  "name": "my-components",
+  "name": "app",
   "version": "1.0.0",
+  "homepage": "https://hkpolyuse.github.io/app",
   "scripts": {
+    "dev": "vite",
     "build": "vite build",
-    "dev": "vite"
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.0.0",
