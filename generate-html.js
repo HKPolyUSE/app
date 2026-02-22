@@ -40,17 +40,26 @@ files.forEach(file => {
   const patchedFile = `${name}.patched.jsx`;
   fs.writeFileSync(path.resolve(rootDir, patchedFile), content);
 
-  const html = `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html>
   <head>
     <title>${name}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+      html { font-size: clamp(8px, 1vw, 16px); }
+      #root { width: 100%; height: 100%; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="./${patchedFile}"></script>
   </body>
 </html>`;
+
 
   fs.writeFileSync(path.resolve(rootDir, `${name}.html`), html);
   console.log(`Generated ${name}.html → renders <${componentName} />`);
